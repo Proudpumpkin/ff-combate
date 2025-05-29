@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mazmorra: Caverna de las Llamas</title>
+  <style>
+   body, html {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  width: 100vw;
+  background-color: black;
+  overflow: hidden;
+}
+    .arena-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+  position: relative;
+}
+    .arena {
+      position: relative;
+      width: 508px;
+      height: 836px;
+      background-image: url('https://i.imgur.com/OtOObaP.png');
+      background-size: cover;
+      background-repeat: no-repeat;
+    }
+    .character {
+      position: absolute;
+      image-rendering: pixelated;
+    }
+    .character.top {
+      left: 320px;
+      top: 320px;
+      width: 160px;
+    }
+    .character.bottom {
+      left: 320px;
+      top: 480px;
+      width: 160px;
+    }
+    .character.derrotado-Oz {
+      width: 60px !important;
+      height: auto !important;
+      left: 360px !important;
+      top: 385px !important;
+    }
+    .character.derrotado-Seira {
+      width: 70px !important;
+      height: auto !important;
+      left: 380px !important;
+      top: 500px !important;
+    }
+    .foto.derrotado {
+      filter: grayscale(100%);
+      opacity: 0.7;
+    }
+    .separator {
+      height: 3px;
+      background-color: rgba(255, 255, 255, 0.3);
+      margin: 5px 0;
+      width: 100%;
+      border-radius: 1px;
+    }
+#combat-menu-seira {
+    width: 400px;
+    background: none;
+    margin-top: 16px;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.combat-command-block {
+    background: #263347;
+    border: 2px solid #34445c;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+    box-sizing: border-box;
+    padding: 0;
+}
+.combat-command-block.open {
+    background: #2f415b;
+    border-color: #4d6482;
+}
+.combat-command-title {
+    font-weight: 700;
+    color: #fff;
+    padding: 12px 16px;
+    font-size: 1.1em;
+    user-select: none;
+}
+.combat-command-content {
+    padding: 10px 26px 14px 26px;
+    border-top: 1px solid #3b4b62;
+}
+.combat-action {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 11px;
+    cursor: pointer;
+}
+.combat-action:last-child {
+    margin-bottom: 0;
+}
+.combat-action-icon {
+    width: 36px;
+    height: 36px;
+    margin-right: 10px;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+.combat-action-info {
+    flex: 1;
+}
+.combat-action-name {
+    font-weight: 600;
+    color: #f0f6fc;
+    font-size: 1.07em;
+    margin-bottom: 1px;
+}
+.combat-action-desc {
+    color: #b3bed3;
+    font-size: 0.97em;
+    line-height: 1.2;
+}
+#target-selection-seira {
+    width: 400px;
+    margin-top: 16px;
+    background: #222d3b;
+    border: 2px solid #34445c;
+    border-radius: 10px;
+    padding: 14px 20px 18px 20px;
+    font-family: 'Segoe UI', sans-serif;
+    color: #fff;
+}
+.target-title {
+    font-weight: 700;
+    margin-bottom: 10px;
+    font-size: 1.08em;
+}
+.target-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.target-option {
+    background: #2f415b;
+    padding: 8px 14px;
+    border-radius: 7px;
+    border: 1px solid #3a4b5d;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.12s;
+    font-size: 1em;
+}
+.target-option:hover {
+    background: #4d6482;
+}
+    .enemy {
+  display: none;
+  position: absolute;
+  image-rendering: pixelated;
+  width: 80px;
+  cursor: pointer;
+  opacity: 1;
+  transition: opacity 0.5s ease, transform 0.2s cubic-bezier(.4,2,.6,1);
+}
+    #enemy1 {
+      left: 80px;
+      top: 380px;
+      width: 25%;
+    }
+    #enemy2-1 {
+      left: 60px;
+      top: 300px;
+    }
+    #enemy2-2 {
+      left: 40px;
+      top: 420px;
+    }
+    #enemy2-3 {
+      left: 60px;
+      top: 540px;
+    }
+    #enemy3-1 {
+      left: 70px;
+      top: 350px;
+    }
+    #enemy3-2 {
+      left: 100px;
+      top: 480px;
+    }
+    #enemy4 {
+      left: 90px;
+      top: 400px;
+      width: 80px;
+      cursor: pointer;
+      opacity: 1;
+      transition: opacity 0.5s ease, transform 0.3s ease;
+    }
+    #enemy5 {
+      left: 60px;
+      top: 380px;
+      width: 35%;
+    }
+    #enemy6 {
+      left: -140px;
+      top: 160px;
+      width: 110%;
+      z-index: 3;
+    }
+    .volume-slider {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+    }
+    .buttons {
+  position: fixed;
+  bottom: 10px;
+  left: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 2000;
+}
+    .buttons button {
+      padding: 5px 10px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .enemy-hud {
+      display: flex;
+      align-items: center;
+      background-color: #330000cc;
+      border-radius: 10px;
+      padding: 20px 20px;
+      margin-bottom: 6px;
+      color: white;
+      width: 625px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      user-select: none;
+      font-family: 'Segoe UI', sans-serif;
+    }
+     .enemy-pv-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Segoe UI', sans-serif;
+      font-size: 12px;
+      color: white;
+      text-align: center;
+      text-shadow: 2px 2px 4px black, -1px -1px 2px black;
+      pointer-events: none;
+    }
+    .enemy-pv-bar-container {
+      background-color: black;
+      border-radius: 8px;
+      width: 200px;
+      height: 16px;
+      overflow: hidden;
+      position: relative;
+      user-select: none;
+    }
+    .enemy-pv-bar-fill {
+      background-color: #22c55e;
+      height: 100%;
+      width: 100%; 
+      transition: width 0.3s ease;
+    }
+    .enemy-hud .etiqueta-barra {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: 10px; 
+    }
+#toggle-enemy-buttons {
+  font-weight: bold;
+  background: #222;
+  color: white;
+  border: 1px solid #666;
+  border-radius: 5px;
+}
+#enemy-buttons-group > button {
+  margin-left: 15px;
+}
+    #hud {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: linear-gradient(135deg, #191f2e 90%, #273965 100%);
+      padding: 20px 20px;
+      width: 625px;
+      border-radius: 10px;
+      z-index: 10;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .personaje-hud {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .nombre {
+      color: #fff;
+      font-weight: bold;
+      font-size: 14px;
+      font-family: 'Segoe UI', sans-serif;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    }
+    .nameplate {
+      background: linear-gradient(90deg, #22304a 60%, #395089 100%);, linear-gradient(90deg, #4a2226 60%, #893939 100%);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 4px 10px;
+      border-radius: 6px;
+      color: #fff;
+      font-weight: bold;
+      font-size: 14px;
+      font-family: 'Segoe UI', sans-serif;
+      text-shadow: 1px 1px 2px black;
+      min-width: 70px;
+      text-align: center;
+    }
+    .foto {
+      width: 150px;
+      height: 50px;
+      object-fit: cover;
+      border-radius: 5px;
+      border: 1px solid white;
+    }
+    .barras-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .etiqueta-barra {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .etiqueta {
+      color: white;
+      font-weight: bold;
+      font-size: 12px;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+      min-width: 24px;
+    }
+    .pv-barra, .pm-barra, .ph-barra {
+      position: relative;
+      width: 200px;
+      height: 16px;
+      background-color: black;
+      border-radius: 8px;
+      font-family: 'Segoe UI', sans-serif;
+      overflow: hidden;
+    }
+    .pv-relleno {
+      background-color: #22c55e;
+      height: 100%;
+      transition: width 0.3s ease;
+    }
+    .pm-relleno {
+      background-color: #3b82f6;
+      height: 100%;
+      transition: width 0.3s ease;
+    }
+    .ph-relleno {
+      background-color: #facc15;
+      height: 100%;
+      transition: width 0.3s ease;
+    }
+    .pv-text, .pm-text, .ph-text {
+      position: absolute;
+      width: 100%;
+      top: 0;
+      text-align: center;
+      font-size: 12px;
+      color: white;
+      text-shadow: 2px 2px 4px black, -1px -1px 2px black;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .enemy-wrapper {
+      position: absolute;
+      pointer-events: none; 
+    }
+
+.personaje-hud.activo {
+  outline: 3px solid #FFD700;
+  box-shadow: 0 0 22px 6px #FFD700;
+  position: relative;
+}
+.personaje-hud.activo::before {
+  content: "►";
+  color: #FFD700;
+  font-size: 22px;
+  position: absolute;
+  left: -26px;
+  top: 22px;
+  animation: parpadeo-turno 0.8s infinite alternate;
+}
+@media (max-width: 600px) {
+  .menu-combate-panel {
+    width: 95vw;
+    left: 2vw;
+    right: auto;
+    top: 12vw;
+    min-height: 320px;
+    padding: 18px 8px 18px 8px;
+  }
+  .menu-descripcion {
+    font-size: 1.05rem;
+    padding: 12px 6px;
+  }
+}
+
+
+@keyframes parpadeo-turno { from { opacity: 1; } to { opacity: 0.3; } }
+    
+    @keyframes explosion {
+      0% {
+        transform: scale(2);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(3);
+        opacity: 0;
+      }
+    }
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-2px); }
+      100% { transform: translateY(0px); }
+    }
+    .character.float {
+      animation: float 2s ease-in-out infinite;
+    }
+    .enemy.float {
+      animation: float 2s ease-in-out infinite;
+    }
+    .enemy.explode {
+      animation: explosion 0.5s ease-out forwards;
+    }
+  </style>
+</head>
+<body>
+<div id="hud">
+  <div class="personaje-hud">
+    <img class="foto" src="https://i.imgur.com/6NV2uTC.png" alt="Oz" />
+    <div class="nameplate">
+      <span class="nombre">Oz</span>
+    </div>
+    <div class="barras-container">
+      <div class="etiqueta-barra">
+        <span class="etiqueta">PV</span>
+        <div class="pv-barra" data-max="80">
+          <div class="pv-relleno" style="width: 100%;"></div>
+          <div class="pv-text">80 / 80</div>
+        </div>
+      </div>
+      <div class="etiqueta-barra">
+        <span class="etiqueta">PM</span>
+        <div class="pm-barra" data-max="12">
+          <div class="pm-relleno" style="width: 100%;"></div>
+          <div class="pm-text">12 / 12</div>
+        </div>
+      </div>
+      <div class="etiqueta-barra">
+        <span class="etiqueta">PH</span>
+        <div class="ph-barra" data-max="5">
+          <div class="ph-relleno" style="width: 100%;"></div>
+          <div class="ph-text">5 / 5</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="separator"></div>
+  <div class="personaje-hud">
+    <img class="foto" src="https://i.imgur.com/omKYTZg.png" alt="Seira" />
+    <div class="nameplate">
+      <span class="nombre">Seira</span>
+    </div>
+    <div class="barras-container">
+      <div class="etiqueta-barra">
+        <span class="etiqueta">PV</span>
+        <div class="pv-barra" data-max="50">
+          <div class="pv-relleno" style="width: 100%;"></div>
+          <div class="pv-text">50 / 50</div>
+        </div>
+      </div>
+      <div class="etiqueta-barra">
+        <span class="etiqueta">PM</span>
+        <div class="pm-barra" data-max="10">
+          <div class="pm-relleno" style="width: 100%;"></div>
+          <div class="pm-text">10 / 10</div>
+        </div>
+      </div>
+      <div class="etiqueta-barra">
+        <span class="etiqueta">PH</span>
+        <div class="ph-barra" data-max="5">
+          <div class="ph-relleno" style="width: 100%;"></div>
+          <div class="ph-text">5 / 5</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="combat-menu-seira"></div>
+<div id="target-selection-seira" style="display: none"></div>
+<div id="combat-menu-oz"></div>
+<div id="target-selection-oz" style="display: none"></div>
+  <div class="buttons">
+  <button id="toggle-enemy-buttons" onclick="toggleEnemyButtons()">Enemigos</button>
+  <div id="enemy-buttons-group" style="display:none; flex-direction: column; gap: 10px; margin-top: 5px;">
+    <button onclick="window.mostrarEnemigo(1)">Enemigo 1</button>
+    <button onclick="window.mostrarEnemigo(2)">Enemigo 2</button>
+    <button onclick="window.mostrarEnemigo(3)">Enemigo 3</button>
+    <button onclick="window.mostrarEnemigo(4)">Enemigo 4</button>
+    <button onclick="window.mostrarEnemigo(5)">Enemigo 5</button>
+    <button onclick="window.mostrarEnemigo(6)">Enemigo 6</button>
+  </div>
+</div>
+  <div class="arena-wrapper">
+    <div class="arena" style="position:relative;">
+      <canvas id="ifrit-link-canvas" width="508" height="836" style="position:absolute; left:0; top:0; pointer-events:none; z-index:0"></canvas>
+      <img src="https://i.imgur.com/biShC3o.png" class="character top float" alt="Personaje 1">
+      <img src="https://i.imgur.com/vGHSYzr.png" class="character bottom float" alt="Personaje 2">
+      <img id="enemy1" src="https://i.imgur.com/7teJ44G.png" class="enemy float" alt="Enemigo 1">
+      <img id="enemy2-1" src="https://i.imgur.com/0HfalZb.png" class="enemy float" alt="Murciélago rojo">
+      <img id="enemy2-2" src="https://i.imgur.com/0HfalZb.png" class="enemy float" alt="Murciélago rojo">
+      <img id="enemy2-3" src="https://i.imgur.com/0HfalZb.png" class="enemy float" alt="Murciélago rojo">
+      <img id="enemy3-1" src="https://i.imgur.com/U1RHNtb.png" class="enemy float" alt="Flan picante">
+      <img id="enemy3-2" src="https://i.imgur.com/U1RHNtb.png" class="enemy float" alt="Flan picante">
+      <img id="enemy4" src="https://i.imgur.com/Ue9VN8A.png" class="enemy float" alt="Bomb">
+      <img id="enemy5" src="https://i.imgur.com/3F1U3BE.png" class="enemy float" alt="Ifrit">
+      <img id="enemy5-ally1" src="https://i.imgur.com/Gy33kHk.png" class="enemy float" alt="Uña de Ifrit A" style="left: 220px; top: 150px; display: none;"> 
+      <img id="enemy5-ally2" src="https://i.imgur.com/Gy33kHk.png" class="enemy float" alt="Uña de Ifrit B" style="left: 220px; top: 550px; display: none;">
+      <img id="enemy6" src="https://i.imgur.com/6e9etOK.png" class="enemy float" alt="Ifrit Desencadenado" style="left: -75px; top: 160px; width: 110%; image-rendering: pixelated;">
+    </div>
+  </div>
+  <input type="range" min="0" max="1" step="0.01" value="0.2" class="volume-slider" onchange="window.ajustarVolumen(this.value)">
+  <div id="enemyHUDContainer" style="position: fixed; top: 20px; left: 20px; width: 625px; z-index: 1000;"></div>
+  <audio id="bgm" loop>
+    <source src="https://www.dropbox.com/scl/fi/67y6rr9p0k27eq02bgsar/FFXIV-OST-Eden-s-Promise-Cloud-of-Darkness-Theme-Don-t-Be-Afraid.mp3?rlkey=yrqn8647vs6nds6ha2oddxidu&st=dnutan8l&raw=1" type="audio/mpeg">
+  </audio>
+  <audio id="victory" loop>
+    <source src="https://www.dropbox.com/scl/fi/4e3kq7wwqdg5qustfqkvq/Final-Fantasy-VIII-Victory-Fanfare.mp3?rlkey=7zjtyb3v8quh9197apvvr82u1&st=1gqhjs3c&raw=1" type="audio/mpeg">
+  </audio>
+  <audio id="boss" loop>
+    <source src="https://www.dropbox.com/scl/fi/tsjvai9ckmuzqz08x1ety/Final-Fantasy-VIII-OST-10.-Force-Your-Way.mp3?rlkey=dz3j7s11jk5f2d0s69ubu70qe&st=5klq8o0o&dl=1" type="audio/mpeg">
+  </audio>
+  <audio id="enemy6music" loop>
+    <source src="https://www.dropbox.com/scl/fi/gejlxm3zpsq45fw8cluvp/Find-the-Flame-Masayoshi-Soken-Final-Fantasy-XVI-Lyrics-Video.mp3?rlkey=aiqkmu75kbrx407p7n7y8u6sv&e=1&st=l8le8wld&dl=1" type="audio/mpeg">
+  </audio>
+  <script>
+    // Unifica los nombres de murciélagos a "Murciélago rojo"
+    const enemigosData = {
+      "enemy1": { nombre: "Buel", pvMax: 60, pv: 60 },
+      "enemy2-1": { nombre: "Murciélago rojo", pvMax: 35, pv: 35 },
+      "enemy2-2": { nombre: "Murciélago rojo", pvMax: 35, pv: 35 },
+      "enemy2-3": { nombre: "Murciélago rojo", pvMax: 35, pv: 35 },
+      "enemy3-1": { nombre: "Flan Picante", pvMax: 60, pv: 60 },
+      "enemy3-2": { nombre: "Flan Picante", pvMax: 60, pv: 60 },
+      "enemy4": { nombre: "Bomb", pvMax: 90, pv: 90 },
+      "enemy5": { nombre: "Ifrit", pvMax: 150, pv: 150, aliadosInvocados: false },
+      "enemy5-ally1": { nombre: "Uña de Ifrit A", pvMax: 50, pv: 50 },
+      "enemy5-ally2": { nombre: "Uña de Ifrit B", pvMax: 50, pv: 50 },
+      "enemy6": { nombre: "Ifrit Desencadenado", pvMax: 200, pv: 200 }
+    };
+
+    let enemigosVisiblesHUD = [];
+
+    function crearHudEnemigo(id) {
+      const container = document.getElementById('enemyHUDContainer');
+      const data = enemigosData[id];
+      if (!data) return;
+
+      const existingHud = document.getElementById('hud-' + id);
+      if (existingHud) return;
+
+      const hud = document.createElement('div');
+      hud.classList.add('enemy-hud');
+      hud.id = 'hud-' + id;
+
+      const nameplate = document.createElement('div');
+      nameplate.classList.add('nameplate');
+      const nombreElem = document.createElement('span');
+      nombreElem.classList.add('nombre');
+      nombreElem.textContent = data.nombre;
+      nameplate.appendChild(nombreElem);
+      hud.appendChild(nameplate);
+
+      const pvTexto = document.createElement('div');
+      pvTexto.classList.add('enemy-pv-text');
+      pvTexto.textContent = `${data.pv} / ${data.pvMax}`;
+      const barraCont = document.createElement('div');
+      barraCont.classList.add('enemy-pv-bar-container');
+      barraCont.setAttribute('data-max', data.pvMax);
+
+      const etiquetaBarra = document.createElement('div');
+      etiquetaBarra.classList.add('etiqueta-barra');
+      const etiqueta = document.createElement('span');
+      etiqueta.classList.add('etiqueta');
+      etiqueta.textContent = 'PV';
+      etiquetaBarra.appendChild(etiqueta);
+      etiquetaBarra.appendChild(barraCont);
+
+      const barraFill = document.createElement('div');
+      barraFill.classList.add('enemy-pv-bar-fill');
+      barraFill.style.width = '100%';
+      barraFill.appendChild(pvTexto);
+      barraCont.appendChild(barraFill);
+      hud.appendChild(etiquetaBarra);
+
+      container.appendChild(hud);
+
+      let pulsando = false;
+      let maxValor = data.pvMax;
+      let idEnemigo = id;
+      let relleno = barraFill;
+      let texto = pvTexto;
+      let barra = barraCont;
+
+      function actualizarBarra(nuevoValor) {
+        nuevoValor = Math.max(0, Math.min(maxValor, nuevoValor));
+        const porcentaje = (nuevoValor / maxValor) * 100;
+        relleno.style.width = porcentaje + '%';
+        texto.textContent = `${nuevoValor} / ${maxValor}`;
+        relleno.style.backgroundColor = porcentaje <= 20 ? 'darkred' : '#22c55e';
+        enemigosData[idEnemigo].pv = nuevoValor;
+
+        if (idEnemigo === "enemy5" && nuevoValor <= enemigosData["enemy5"].pvMax / 2 && !enemigosData["enemy5"].aliadosInvocados) {
+          enemigosData["enemy5"].aliadosInvocados = true;
+          document.getElementById("enemy5-ally1").style.display = "block";
+          document.getElementById("enemy5-ally2").style.display = "block";
+          enemigosVisiblesHUD = ["enemy5", "enemy5-ally1", "enemy5-ally2"];
+          actualizarHudEnemigos(enemigosVisiblesHUD);
+        }
+
+        if (nuevoValor === 0) {
+          // Oculta sprite y HUD
+          const enemySprite = document.getElementById(idEnemigo);
+          if (enemySprite) enemySprite.style.display = 'none';
+          const hudEnemy = document.getElementById('hud-' + idEnemigo);
+          if (hudEnemy) hudEnemy.remove();
+          window.checkVictoria();
+        }
+      }
+
+      barra.addEventListener('mousedown', e => {
+        pulsando = true;
+        mover(e);
+      });
+      window.addEventListener('mouseup', () => { pulsando = false; });
+      window.addEventListener('mousemove', e => { if (pulsando) mover(e); });
+      function mover(e) {
+        const rect = barra.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const nuevoValor = Math.round((x / rect.width) * maxValor);
+        actualizarBarra(nuevoValor);
+      }
+
+      actualizarBarra(data.pv);
+    }
+
+    function actualizarHudEnemigos(ids) {
+      enemigosVisiblesHUD = ids.slice(); // copia
+      const container = document.getElementById('enemyHUDContainer');
+      container.innerHTML = '';
+      ids.forEach(id => crearHudEnemigo(id));
+    }
+    function cambiarFondoArena(url) {
+      document.querySelector('.arena').style.backgroundImage = `url('${url}')`;
+    }
+
+    const bgm = document.getElementById("bgm");
+    const victory = document.getElementById("victory");
+
+    window.iniciarMusicaNormal = function() {
+      const boss = document.getElementById("boss");
+      if (boss) { boss.pause(); boss.currentTime = 0; }
+      if (bgm.paused) {
+        bgm.volume = parseFloat(document.querySelector('.volume-slider').value);
+        bgm.currentTime = 0;
+        bgm.play().catch(()=>{});
+      }
+    };
+    window.iniciarMusicaBoss = function() {
+      const boss = document.getElementById("boss");
+      if (bgm) { bgm.pause(); bgm.currentTime = 0; }
+      if (boss) {
+        boss.volume = parseFloat(document.querySelector('.volume-slider').value);
+        boss.currentTime = 0;
+        boss.play().catch(()=>{});
+      }
+    };
+    window.iniciarMusicaEnemigo6 = function() {
+      if (bgm) { bgm.pause(); bgm.currentTime = 0; }
+      if (victory) { victory.pause(); victory.currentTime = 0; }
+      const boss = document.getElementById("boss");
+      if (boss) { boss.pause(); boss.currentTime = 0; }
+      const m6 = document.getElementById("enemy6music");
+      if (m6) {
+        m6.volume = parseFloat(document.querySelector('.volume-slider').value);
+        m6.currentTime = 0;
+        m6.play().catch(()=>{});
+      }
+    };
+    window.ajustarVolumen = function(valor) {
+      const vol = parseFloat(valor);
+      bgm.volume = vol;
+      victory.volume = vol;
+      const boss = document.getElementById("boss");
+      if (boss) boss.volume = vol;
+      const m6 = document.getElementById("enemy6music");
+      if (m6) m6.volume = vol;
+    };
+
+   window.mostrarEnemigo = function(n) {
+  document.querySelectorAll('.enemy').forEach(el => {
+    el.style.display = 'none';
+    el.style.opacity = 1;
+    el.style.transform = 'scale(1)';
+    el.dataset.clicks = 0;
+  });
+  document.getElementById("enemy5-ally1").style.display = "none";
+  document.getElementById("enemy5-ally2").style.display = "none";
+  enemigosData["enemy5"].aliadosInvocados = false;
+
+  victory.pause(); victory.currentTime = 0;
+  const m6 = document.getElementById("enemy6music");
+  if (m6) { m6.pause(); m6.currentTime = 0; }
+
+  let enemigosVisibles = [];
+  if (n === 1) {
+    document.getElementById("enemy1").style.display = "block";
+    enemigosVisibles = ["enemy1"];
+    window.iniciarMusicaNormal();
+  } else if (n === 2) {
+    ["enemy2-1", "enemy2-2", "enemy2-3"].forEach(id => {
+      document.getElementById(id).style.display = "block";
+    });
+    enemigosVisibles = ["enemy2-1", "enemy2-2", "enemy2-3"];
+    window.iniciarMusicaNormal();
+  } else if (n === 3) {
+    ["enemy3-1", "enemy3-2"].forEach(id => {
+      document.getElementById(id).style.display = "block";
+    });
+    enemigosVisibles = ["enemy3-1", "enemy3-2"];
+    window.iniciarMusicaNormal();
+  } else if (n === 4) {
+   const img = document.getElementById("enemy4");
+if (img) {
+  img.style.display = "block";
+  img.style.opacity = 1;
+  img.style.transform = "scale(1)";
+  img.dataset.clicks = 0;
+  img.classList.remove('explode');
+  img.classList.add('float');
+}
+    enemigosVisibles = ["enemy4"];
+    window.iniciarMusicaNormal();
+  } else if (n === 5) {
+    document.getElementById("enemy5").style.display = "block";
+    enemigosVisibles = ["enemy5"];
+    window.iniciarMusicaBoss();
+  } else if (n === 6) {
+    document.getElementById("enemy6").style.display = "block";
+    enemigosVisibles = ["enemy6"];
+    window.iniciarMusicaEnemigo6();
+    cambiarFondoArena("https://i.imgur.com/V3BNdRd.png");
+  }
+
+  actualizarHudEnemigos(enemigosVisibles);
+};
+
+    window.checkVictoria = function() {
+      const visibleEnemies = Array.from(document.querySelectorAll('.enemy'))
+        .filter(el => getComputedStyle(el).display !== 'none');
+      if (visibleEnemies.length === 0) {
+        if (bgm) { bgm.pause(); bgm.currentTime = 0; }
+        const boss = document.getElementById("boss");
+        if (boss) { boss.pause(); boss.currentTime = 0; }
+        const m6 = document.getElementById("enemy6music");
+        if (m6) { m6.pause(); m6.currentTime = 0; }
+        if (victory) {
+          victory.currentTime = 0;
+          victory.volume = parseFloat(document.querySelector('.volume-slider').value);
+          victory.play().catch(()=>{});
+        }
+      }
+    };
+    const barrasPers = document.querySelectorAll('.pv-barra, .pm-barra, .ph-barra');
+    barrasPers.forEach(barra => {
+      let relleno = barra.querySelector('div');
+      let texto = barra.querySelector('div[class$="-text"]');
+      let maxValor = parseInt(barra.dataset.max);
+      let personajeNombre = barra.closest('.personaje-hud').querySelector('.nombre').textContent.trim();
+      let tipo = barra.classList.contains('pv-barra') ? 'pv' : (barra.classList.contains('pm-barra') ? 'pm' : 'ph');
+      let spriteArena = (personajeNombre === "Oz") ? document.querySelector('.arena .character.top') : document.querySelector('.arena .character.bottom');
+      const sprites = {
+        "Oz": {
+          normal: "https://i.imgur.com/biShC3o.png",
+          derrotado: "https://i.imgur.com/KygnWKe.png"
+        },
+        "Seira": {
+          normal: "https://i.imgur.com/wcS42AL.png",
+          derrotado: "https://i.imgur.com/e11RO2R.png"
+        }
+      };
+
+      function actualizarBarra(nuevoValor) {
+        nuevoValor = Math.max(0, Math.min(maxValor, nuevoValor));
+        const porcentaje = (nuevoValor / maxValor) * 100;
+        relleno.style.width = porcentaje + '%';
+        texto.textContent = `${nuevoValor} / ${maxValor}`;
+        if (tipo === 'pv') {
+          relleno.style.backgroundColor = porcentaje <= 20 ? 'darkred' : '#22c55e';
+          const imagenHUD = barra.closest('.personaje-hud').querySelector('.foto');
+          if (nuevoValor === 0) {
+            spriteArena.src = sprites[personajeNombre].derrotado;
+            spriteArena.classList.add('derrotado-' + personajeNombre);
+            imagenHUD.classList.add('derrotado');
+          } else {
+            spriteArena.src = sprites[personajeNombre].normal;
+            spriteArena.classList.remove('derrotado-' + personajeNombre);
+            imagenHUD.classList.remove('derrotado');
+          }
+        } else if (tipo === 'pm') {
+          relleno.style.backgroundColor = '#3b82f6';
+        } else if (tipo === 'ph') {
+          relleno.style.backgroundColor = '#facc15';
+        }
+      }
+      let pulsando = false;
+      barra.addEventListener('mousedown', e => { pulsando = true; mover(e); });
+      window.addEventListener('mouseup', () => { pulsando = false; });
+      window.addEventListener('mousemove', e => { if (pulsando) mover(e); });
+      function mover(e) {
+        const rect = barra.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const nuevoValor = Math.round((x / rect.width) * maxValor);
+        actualizarBarra(nuevoValor);
+      }
+      actualizarBarra(maxValor);
+    });
+
+    const enemy4 = document.getElementById('enemy4');
+    if (enemy4) {
+      enemy4.addEventListener('click', () => {
+        if (enemy4.style.display === 'none') return;
+        let clicks = parseInt(enemy4.dataset.clicks) || 0;
+        clicks++;
+        enemy4.dataset.clicks = clicks;
+        if (clicks === 1) {
+  enemy4.classList.remove('float');
+  enemy4.style.transform = 'scale(1.5)';
+} else if (clicks === 2) {
+  enemy4.style.transform = 'scale(2)';
+} else if (clicks === 3) {
+  enemy4.classList.add('explode');
+  setTimeout(() => {
+    enemy4.style.display = 'none';
+    const hud = document.getElementById('hud-enemy4');
+    if (hud) hud.remove();
+    window.checkVictoria();
+  }, 500);
+}
+      });
+    }
+    function getCenter(el) {
+      if (!el || el.style.display === 'none') return null;
+      const arena = document.querySelector('.arena');
+      const rect = el.getBoundingClientRect();
+      const arenaRect = arena.getBoundingClientRect();
+      const x = rect.left - arenaRect.left + rect.width/2;
+      const y = rect.top - arenaRect.top + rect.height/2;
+      return {x, y};
+    }
+
+function toggleEnemyButtons() {
+  const group = document.getElementById('enemy-buttons-group');
+  const mainBtn = document.getElementById('toggle-enemy-buttons');
+  if (group.style.display === 'none') {
+    group.style.display = 'flex';
+    mainBtn.textContent = 'Enemigos';
+  } else {
+    group.style.display = 'none';
+    mainBtn.textContent = 'Enemigos';
+  }
+}
+
+    function drawFireLink(ctx, from, to, t) {
+      if (!from || !to) return;
+      ctx.save();
+      ctx.strokeStyle = "orange";
+      ctx.shadowColor = "yellow";
+      ctx.shadowBlur = 25;
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      ctx.moveTo(from.x, from.y);
+      const steps = 32;
+      for (let i = 1; i < steps; ++i) {
+        const p = i/steps;
+        let x = from.x + (to.x - from.x) * p;
+        let y = from.y + (to.y - from.y) * p;
+        let angle = Math.atan2(to.y - from.y, to.x - from.x);
+        let amp = Math.sin(t/500 + p*10 + t/800) * (12 * Math.sin(Math.PI*p));
+        let side = Math.cos(t/300 + p*18 + t/900) * (7 * Math.sin(Math.PI*p));
+        x += Math.sin(angle + Math.PI/2) * amp;
+        y += side;
+        ctx.lineTo(x, y);
+      }
+      ctx.lineTo(to.x, to.y);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function fireLinkLoop() {
+      const canvas = document.getElementById("ifrit-link-canvas");
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+
+      const ifrit = document.getElementById("enemy5");
+      const ally1 = document.getElementById("enemy5-ally1");
+      const ally2 = document.getElementById("enemy5-ally2");
+
+      const ifritPos = getCenter(ifrit);
+      const ally1Pos = getCenter(ally1);
+      const ally2Pos = getCenter(ally2);
+
+      const now = performance.now();
+
+      if (ifritPos && ally1Pos) drawFireLink(ctx, ifritPos, ally1Pos, now);
+      if (ifritPos && ally2Pos) drawFireLink(ctx, ifritPos, ally2Pos, now);
+
+      requestAnimationFrame(fireLinkLoop);
+    }
+    fireLinkLoop();
+  </script>
+<script type="module" src="main.js"></script>
+</body>
+</html>
