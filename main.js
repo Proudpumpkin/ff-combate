@@ -410,3 +410,221 @@ for (let i = 1; i <= 6; i++) {
 
 window.renderBotonDescripcion = renderBotonDescripcion;
 export { mostrarFlyingText, animarBarra };
+
+import { PERSONAJES, ENEMIGOS } from './personajes-enemigos.js';
+import { HECHIZOS, OBJETOS } from './hechizos-objetos-enlaces.js';
+import { combate } from './motor-combate.js';
+
+// Utilidad para clonar personajes/enemigos y sus estados
+function clonarEquipo(eq) {
+  return eq.map(p => ({
+    ...p,
+    estados: [...(p.estados || [])]
+  }));
+}
+
+// Encuentra a Oz en el array de personajes
+function getOz() {
+  return PERSONAJES.find(p => p.id === "Oz");
+}
+
+// Genera el menú de comandos para Oz dinámicamente usando sus datos reales
+function buildOzCommands() {
+  const oz = getOz();
+  if (!oz) return [];
+
+  // Iconos sugeridos, puedes cambiarlos por los tuyos
+  const skillIcon = name => `img/skills/${name.toLowerCase().replace(/ /g, '-').normalize('NFD').replace(/[\u0300-\u036f]/g, "")}.png`;
+  const magicIcon = name => `img/magic/${name.toLowerCase().replace(/ /g, '-').normalize('NFD').replace(/[\u0300-\u036f]/g, "")}.png`;
+  const limitIcon = name => `img/limit/limit.png`;
+  const itemIcon = name => `img/items/${name.toLowerCase().replace(/ /g, '-').normalize('NFD').replace(/[\u0300-\u036f]/g, "")}.png`;
+
+  // Bloque Guardia
+  const guardia = oz.habilidades.find(h => h.categoria === "Guardia");
+  const guardBlock = guardia ? [{
+    key: "guard",
+    title: "Guardia",
+    actions: [{
+      name: guardia.nombre,
+      icon: skillIcon(guardia.nombre),
+      desc: guardia.descripcion,
+      target: "self"
+    }]
+  }] : [];
+
+  // Bloque Habilidades
+  const habilidades = oz.habilidades.filter(h => h.categoria !== "Guardia" && h.categoria !== "Habilidad" && h.categoria !== "Especial" && h.categoria !== "Básico");
+  const otrasHabilidades = oz.habilidades.filter(h => ["Habilidad", "Especial", "Básico"].includes(h.categoria) && h.nombre !== guardia?.nombre);
+  const habBlock = habilidades.length || otrasHabilidades.length ? [{
+    key: "skills",
+    title: "Habilidades",
+    actions: [...habilidades, ...otrasHabilidades].map(h => ({
+      name: h.nombre,
+      icon: skillIcon(h.nombre),
+      desc: h.descripcion,
+      target: h.objetivo === "TodosEnemigos" ? "allEnemies" :
+             h.objetivo === "Aliado" ? "ally" :
+             h.objetivo === "Propio" ? "self" :
+             h.objetivo === "Variable" ? "all" :
+             "enemy"
+    }))
+  }] : [];
+
+  // Bloque Magia
+  const magias = (oz.magias || []);
+  const magBlock = magias.length ? [{
+    key: "magic",
+    title: "Magia",
+    actions: magias.map(m => ({
+      name: m.nombre,
+      icon: magicIcon(m.nombre),
+      desc: m.descripcion,
+      target: m.objetivo === "TodosAliados" ? "allAllies" :
+             m.objetivo === "Aliado" ? "ally" :
+             m.objetivo === "Propio" ? "self" :
+             m.objetivo === "TodosEnemigos" ? "allEnemies" :
+             "enemy"
+    }))
+  }] : [];
+
+  // Bloque Límite
+  const limit = oz.limite;
+  const limitBlock = limit ? [{
+    key: "limit",
+    title: "Límite",
+    actions: [{
+      name: limit.nombre,
+      icon: limitIcon(limit.nombre),
+      desc: limit.descripcion,
+      target: "enemy" // ajusta si tu límite es grupal o sobre Oz
+    }]
+  }] : [];
+
+  // Bloque Objetos (puedes personalizar los objetos disponibles)
+  const itemsBlock = [{
+    key: "items",
+    title: "Objetos",
+    actions: OBJETOS.map(obj => ({
+      name: obj.nombre,
+      icon: itemIcon(obj.nombre),
+      desc: obj.descripcion,
+      target: obj.tipo === "CurarPV" || obj.tipo === "CurarPM" || obj.tipo === "Resucitar" ? "ally" : "enemy"
+    }))
+  }];
+
+  // Une los bloques
+  return [
+    ...guardBlock,
+    ...habBlock,
+    ...magBlock,
+    ...limitBlock,
+    ...itemsBlock
+  ];
+}
+
+// -------------------- COMPONENTES VISUALES DEL MENÚ DE OZ --------------------
+
+let currentOpenOz = null;
+let currentActionOz = null;
+
+function renderCombatMenuOz() {
+  const ozCommands = buildOzCommands();
+  const container = document.getElementById('combat-menu-oz');
+  let html = '';
+  ozCommands.forEach((command, i) => {
+    html += `
+      <div class="combat-command-block${currentOpenOz === i ? ' open' : ''}" data-command-idx="${i}">
+        <div class="combat-command-title">${command.title}</div>
+        ${currentOpenOz === i ? `
+        <div class="combat-command-content">
+          ${command.actions.map((action, j) => `
+            <div class="combat-action" data-action-idx="${j}" data-command-idx="${i}">
+              <img class="combat-action-icon" src="${action.icon}" alt="" />
+              <div class="combat-action-info">
+                <div class="combat-action-name">${action.name}</div>
+                <div class="combat-action-desc">${action.desc}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        ` : ''}
+      </div>
+    `;
+  });
+  container.innerHTML = html;
+
+  // Eventos de abrir/cerrar bloques
+  document.querySelectorAll('#combat-menu-oz .combat-command-title').forEach((el, i) => {
+    el.onclick = () => {
+      if (currentOpenOz === i) {
+        currentOpenOz = null;
+      } else {
+        currentOpenOz = i;
+      }
+      renderCombatMenuOz();
+    };
+  });
+
+  // Eventos de seleccionar acción
+  document.querySelectorAll('.combat-action').forEach(el => {
+    el.onclick = () => {
+      const cmdIdx = +el.getAttribute('data-command-idx');
+      const actIdx = +el.getAttribute('data-action-idx');
+      currentActionOz = buildOzCommands()[cmdIdx].actions[actIdx];
+      document.getElementById('combat-menu-oz').style.display = 'none';
+      renderTargetSelectionOz(currentActionOz);
+    };
+  });
+}
+
+function renderTargetSelectionOz(action) {
+  const container = document.getElementById('target-selection-oz');
+  // Usa tus datos de personajes y enemigos reales para el combate actual
+  // Por ahora, ejemplo sencillo:
+  let targets = [];
+  let title = "Elige objetivo";
+  // Debes adaptar esto para usar los arrays de personajes/enemigos de la batalla real
+  switch (action.target) {
+    case "enemy":
+    case "allEnemies":
+      targets = Object.values(ENEMIGOS); title = "Elige enemigo"; break;
+    case "ally":
+    case "allAllies":
+      targets = PERSONAJES; title = "Elige aliado"; break;
+    case "self":
+      targets = [getOz()]; title = "Oz"; break;
+    default:
+      targets = Object.values(ENEMIGOS).concat(PERSONAJES);
+      break;
+  }
+  let html = `
+    <div class="target-title">${title}</div>
+    <div class="target-list">
+      ${targets.map(t => `<div class="target-option" data-id="${t.id}">${t.nombre}</div>`).join('')}
+    </div>
+  `;
+  container.innerHTML = html;
+  container.style.display = '';
+
+  // Evento de seleccionar objetivo
+  document.querySelectorAll('.target-option').forEach(el => {
+    el.onclick = () => {
+      const targetId = el.getAttribute('data-id');
+      handleActionOz(action, targetId);
+    };
+  });
+}
+
+// Aquí va la lógica real para aplicar la acción de Oz (debes conectar con tu sistema de combate)
+function handleActionOz(action, targetId) {
+  alert(`Oz usa "${action.name}" sobre el objetivo ${targetId}.`);
+  document.getElementById('target-selection-oz').style.display = 'none';
+  document.getElementById('combat-menu-oz').style.display = '';
+  // Aquí deberías pasar el turno, aplicar el efecto real, etc.
+}
+
+// Inicializa el menú de Oz cuando sea su turno
+// Llama a renderCombatMenuOz() cuando sea el turno de Oz
+
+// Exporta si lo necesitas
+export { renderCombatMenuOz };
